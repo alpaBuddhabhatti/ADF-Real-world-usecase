@@ -1,0 +1,85 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "DEMO-HUB-DEV-ETL"
+		},
+		"LS_ASQL_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_ASQL'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=demo-asql-dev-etl.database.windows.net;Initial Catalog=DEMO-ASQL-DEV-ETL"
+		},
+		"LS_ABLB_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://demostoredevetl.blob.core.windows.net/"
+		},
+		"ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/842dbd11-70de-4377-9182-6377137563f7/resourceGroups/DEMO-RG-DEV-MAIN/providers/Microsoft.Storage/storageAccounts/demostoredevetl"
+		},
+		"ABLB_ETL_MANAGED_ENDPOINT_properties_groupId": {
+			"type": "string",
+			"defaultValue": "blob"
+		},
+		"ASQL_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/842dbd11-70de-4377-9182-6377137563f7/resourceGroups/DEMO-RG-DEV-MAIN/providers/Microsoft.Sql/servers/demo-asql-dev-etl"
+		},
+		"ASQL_ETL_MANAGED_ENDPOINT_properties_groupId": {
+			"type": "string",
+			"defaultValue": "sqlServer"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "DEMO-HUB-DEV-ETL_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"LS_ASQL_connectionString": {
+						"value": "[parameters('LS_ASQL_connectionString')]"
+					},
+					"ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
+						"value": "[parameters('ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId')]"
+					},
+					"ABLB_ETL_MANAGED_ENDPOINT_properties_groupId": {
+						"value": "[parameters('ABLB_ETL_MANAGED_ENDPOINT_properties_groupId')]"
+					},
+					"ASQL_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
+						"value": "[parameters('ASQL_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId')]"
+					},
+					"ASQL_ETL_MANAGED_ENDPOINT_properties_groupId": {
+						"value": "[parameters('ASQL_ETL_MANAGED_ENDPOINT_properties_groupId')]"
+					},
+					"LS_ABLB_properties_typeProperties_serviceEndpoint": {
+						"value": "[parameters('LS_ABLB_properties_typeProperties_serviceEndpoint')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

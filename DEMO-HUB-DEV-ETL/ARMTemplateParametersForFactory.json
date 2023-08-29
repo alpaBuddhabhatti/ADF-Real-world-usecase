@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "DEMO-HUB-DEV-ETL"
+		},
+		"LS_ASQL_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=demo-asql-dev-etl.database.windows.net;Initial Catalog=DEMO-ASQL-DEV-ETL"
+		},
+		"LS_ABLB_properties_typeProperties_serviceEndpoint": {
+			"value": "https://demostoredevetl.blob.core.windows.net/"
+		},
+		"ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
+			"value": "/subscriptions/842dbd11-70de-4377-9182-6377137563f7/resourceGroups/DEMO-RG-DEV-MAIN/providers/Microsoft.Storage/storageAccounts/demostoredevetl"
+		},
+		"ABLB_ETL_MANAGED_ENDPOINT_properties_groupId": {
+			"value": "blob"
+		},
+		"ASQL_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
+			"value": "/subscriptions/842dbd11-70de-4377-9182-6377137563f7/resourceGroups/DEMO-RG-DEV-MAIN/providers/Microsoft.Sql/servers/demo-asql-dev-etl"
+		},
+		"ASQL_ETL_MANAGED_ENDPOINT_properties_groupId": {
+			"value": "sqlServer"
+		}
+	}
+}
