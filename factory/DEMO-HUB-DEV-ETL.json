@@ -1,0 +1,9 @@
+{
+	"name": "DEMO-HUB-DEV-ETL",
+	"location": "uksouth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "93d8a6f6-dc79-488c-94c6-5aa77dbe57db",
+		"tenantId": "c10d9100-7f58-4e3c-af7d-0cc0317096ea"
+	}
+}

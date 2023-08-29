@@ -1,0 +1,15 @@
+{
+	"name": "LS_ASQL",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=demo-asql-dev-etl.database.windows.net;Initial Catalog=DEMO-ASQL-DEV-ETL"
+		},
+		"connectVia": {
+			"referenceName": "ManagedIR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

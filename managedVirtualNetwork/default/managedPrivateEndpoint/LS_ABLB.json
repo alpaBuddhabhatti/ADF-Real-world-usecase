@@ -1,0 +1,10 @@
+{
+	"name": "LS_ABLB",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/842dbd11-70de-4377-9182-6377137563f7/resourceGroups/DEMO-RG-DEV-MAIN/providers/Microsoft.Storage/storageAccounts/demostoredevetl",
+		"groupId": "blob",
+		"fqdns": [
+			"demostoredevetl.blob.core.windows.net"
+		]
+	}
+}
