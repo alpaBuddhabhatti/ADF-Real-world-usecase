@@ -9,7 +9,9 @@
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobStorageLocation"
+				"type": "AzureBlobStorageLocation",
+				"fileName": "moviesDB.csv",
+				"container": "bo001"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
