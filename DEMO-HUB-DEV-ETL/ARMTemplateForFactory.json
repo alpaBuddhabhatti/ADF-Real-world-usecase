@@ -215,7 +215,7 @@
 											]
 										},
 										{
-											"activity": "Set variable1",
+											"activity": "Get WhereCondition",
 											"dependencyConditions": [
 												"Succeeded"
 											]
@@ -303,7 +303,7 @@
 									}
 								},
 								{
-									"name": "Set variable1",
+									"name": "Get WhereCondition",
 									"type": "SetVariable",
 									"dependsOn": [],
 									"policy": {
@@ -535,48 +535,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_ASQL')]",
 				"[concat(variables('factoryId'), '/datasets/DS_ABLB_DP_OUT')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/OB003')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Clear Down - OB3",
-						"description": "Cleansing data from different tables",
-						"type": "SqlServerStoredProcedure",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"storedProcedureName": "[[stage].[usp_Clean_Down_OB3]"
-						},
-						"linkedServiceName": {
-							"referenceName": "LS_ASQL",
-							"type": "LinkedServiceReference"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"folder": {
-					"name": "metadata"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-09-06T20:28:33Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_ASQL')]"
 			]
 		},
 		{
