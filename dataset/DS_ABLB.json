@@ -5,14 +5,6 @@
 			"referenceName": "LS_ABLB",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"File_Name": {
-				"type": "string"
-			},
-			"Folder_Name": {
-				"type": "string"
-			}
-		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
