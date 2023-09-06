@@ -16,6 +16,22 @@
 			"type": "string",
 			"defaultValue": "https://demostoredevetl.blob.core.windows.net/"
 		},
+		"LS_ABLB_DATAPLAT_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://demostoredevetl.blob.core.windows.net/"
+		},
+		"LS_ABLB_DP_properties_typeProperties_sasUri_secretName": {
+			"type": "string",
+			"defaultValue": "ABLB-DP-SAS"
+		},
+		"LS_ABLB_SFTP_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://demostoredevetl.blob.core.windows.net/"
+		},
+		"LS_KV_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://AZDEV-KV.vault.azure.net/"
+		},
 		"ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
 			"type": "string",
 			"defaultValue": "/subscriptions/842dbd11-70de-4377-9182-6377137563f7/resourceGroups/DEMO-RG-DEV-MAIN/providers/Microsoft.Storage/storageAccounts/demostoredevetl"
@@ -24,6 +40,12 @@
 			"type": "string",
 			"defaultValue": "blob"
 		},
+		"ABLB_ETL_MANAGED_ENDPOINT_properties_fqdns": {
+			"type": "array",
+			"defaultValue": [
+				"demostoredevetl.blob.core.windows.net"
+			]
+		},
 		"ASQL_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
 			"type": "string",
 			"defaultValue": "/subscriptions/842dbd11-70de-4377-9182-6377137563f7/resourceGroups/DEMO-RG-DEV-MAIN/providers/Microsoft.Sql/servers/demo-asql-dev-etl"
@@ -31,6 +53,12 @@
 		"ASQL_ETL_MANAGED_ENDPOINT_properties_groupId": {
 			"type": "string",
 			"defaultValue": "sqlServer"
+		},
+		"ASQL_ETL_MANAGED_ENDPOINT_properties_fqdns": {
+			"type": "array",
+			"defaultValue": [
+				"demo-asql-dev-etl.database.windows.net"
+			]
 		},
 		"containerUri": {
 			"type": "string",
@@ -62,11 +90,20 @@
 					"LS_ASQL_connectionString": {
 						"value": "[parameters('LS_ASQL_connectionString')]"
 					},
+					"LS_KV_properties_typeProperties_baseUrl": {
+						"value": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
+					},
+					"LS_ABLB_DP_properties_typeProperties_sasUri_secretName": {
+						"value": "[parameters('LS_ABLB_DP_properties_typeProperties_sasUri_secretName')]"
+					},
 					"ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
 						"value": "[parameters('ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId')]"
 					},
 					"ABLB_ETL_MANAGED_ENDPOINT_properties_groupId": {
 						"value": "[parameters('ABLB_ETL_MANAGED_ENDPOINT_properties_groupId')]"
+					},
+					"ABLB_ETL_MANAGED_ENDPOINT_properties_fqdns": {
+						"value": "[parameters('ABLB_ETL_MANAGED_ENDPOINT_properties_fqdns')]"
 					},
 					"ASQL_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
 						"value": "[parameters('ASQL_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId')]"
@@ -74,12 +111,41 @@
 					"ASQL_ETL_MANAGED_ENDPOINT_properties_groupId": {
 						"value": "[parameters('ASQL_ETL_MANAGED_ENDPOINT_properties_groupId')]"
 					},
+					"ASQL_ETL_MANAGED_ENDPOINT_properties_fqdns": {
+						"value": "[parameters('ASQL_ETL_MANAGED_ENDPOINT_properties_fqdns')]"
+					},
 					"LS_ABLB_properties_typeProperties_serviceEndpoint": {
 						"value": "[parameters('LS_ABLB_properties_typeProperties_serviceEndpoint')]"
+					},
+					"LS_ABLB_DATAPLAT_properties_typeProperties_serviceEndpoint": {
+						"value": "[parameters('LS_ABLB_DATAPLAT_properties_typeProperties_serviceEndpoint')]"
+					},
+					"LS_ABLB_SFTP_properties_typeProperties_serviceEndpoint": {
+						"value": "[parameters('LS_ABLB_SFTP_properties_typeProperties_serviceEndpoint')]"
 					}
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "DEMO-HUB-DEV-ETL_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'DEMO-HUB-DEV-ETL_ArmTemplate_0')]"
+			]
 		}
 	]
 }

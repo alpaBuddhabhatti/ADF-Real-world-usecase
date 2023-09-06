@@ -1,0 +1,595 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "DEMO-HUB-DEV-ETL"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/OB004_CHILD_FULL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Retrieve Config for OB4001",
+						"description": "Retrieving config info for OB4001 to extract data for Data Platform",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT * FROM stage.ADF_Config where Spec_Code = '@{pipeline().parameters.speccode}' and Operation ='full'",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_ASQL",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASQL",
+							"type": "LinkedServiceReference"
+						},
+						"outputs": [
+							{
+								"name": "Configuration"
+							}
+						]
+					},
+					{
+						"name": "ForEach Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Retrieve Config for OB4001",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "TimeStampt",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Retrieve Config for OB4001').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 3,
+							"activities": [
+								{
+									"name": "Copy data - Full Load",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "Select * from @{item().Source_Name}",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".csv"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_ASQL",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ABLB_SFTP",
+											"type": "DatasetReference",
+											"parameters": {
+												"File_Name": {
+													"value": "@concat(item().Target_Name,'_',variables('TimeStamp'),item().Target_File_Extention)\n",
+													"type": "Expression"
+												},
+												"Folder_Name": {
+													"value": "@item().Directory",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "TimeStampt",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "TimeStamp",
+							"value": {
+								"value": "@substring(replace(replace(replace(pipeline().TriggerTime,'-',''),':',''),'T',''),0,15)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"speccode": {
+						"type": "String",
+						"defaultValue": "OB004"
+					}
+				},
+				"variables": {
+					"TimeStamp": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "metadata"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-06T20:28:34Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/OB005_Child')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This pipeline extracts data to sftp for SMC.",
+				"activities": [
+					{
+						"name": "Retrieve Market",
+						"description": "Retrieving config info for SMCC4M001 to extract data to sftp",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT [market_id]\n ,[tbs_market_code]\n ,[market_name]\nFROM [Customer].[Market]",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_ASQL",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASQL",
+							"type": "LinkedServiceReference"
+						},
+						"outputs": [
+							{
+								"name": "Configuration"
+							}
+						]
+					},
+					{
+						"name": "ForEach Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Retrieve Market",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "TimeStampt",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Retrieve Market').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 3,
+							"activities": [
+								{
+									"name": "Copy data",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "Select * from @{pipeline().parameters.ViewName} where Country_Name = '@{item().market_name}'",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings",
+												"maxConcurrentConnections": 1
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".csv"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_ASQL",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ABLB_SFTP",
+											"type": "DatasetReference",
+											"parameters": {
+												"File_Name": {
+													"value": "@concat(pipeline().parameters.Target_Name,'_',item().market_name,'_',variables('TimeStamp'),'.',pipeline().parameters.Target_File_Extention)",
+													"type": "Expression"
+												},
+												"Folder_Name": {
+													"value": "@pipeline().parameters.Directory",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "TimeStampt",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "TimeStamp",
+							"value": {
+								"value": "@substring(replace(replace(replace(pipeline().TriggerTime,'-',''),':',''),'T',''),0,15)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"SpecCode": {
+						"type": "String",
+						"defaultValue": "SMCC4M001"
+					},
+					"ViewName": {
+						"type": "string"
+					},
+					"Directory": {
+						"type": "string"
+					},
+					"Target_File_Extention": {
+						"type": "string"
+					},
+					"Target_Name": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"TimeStamp": {
+						"type": "String"
+					},
+					"value": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "metadata"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-06T20:28:34Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/OB004')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Full Load",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "OB004_CHILD_FULL",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"speccode": "OB004"
+							}
+						}
+					},
+					{
+						"name": "Delta Load",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Full Load",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "OB004_CHILD_DELTA",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"speccode": {
+									"value": "OB004",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"speccode": {
+						"type": "String",
+						"defaultValue": "OB004"
+					}
+				},
+				"variables": {
+					"TimeStamp": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "metadata"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-06T20:28:34Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/OB004_CHILD_FULL')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/OB005')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This pipeline extracts data to sftp for SMC.",
+				"activities": [
+					{
+						"name": "Retrieve Config for SMCC4M001",
+						"description": "Retrieving config info for SMCC4M001 to extract data to sftp",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT * FROM stage.ADF_Config where Spec_Code = '@{pipeline().parameters.speccode}' and Operation ='full'",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_ASQL",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASQL",
+							"type": "LinkedServiceReference"
+						},
+						"outputs": [
+							{
+								"name": "Configuration"
+							}
+						]
+					},
+					{
+						"name": "ForEach Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Retrieve Config for SMCC4M001",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Retrieve Config for SMCC4M001').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 3,
+							"activities": [
+								{
+									"name": "Execute Pipeline",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "OB005_Child",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"SpecCode": "SMCC4M001",
+											"ViewName": {
+												"value": "@item().Source_Name",
+												"type": "Expression"
+											},
+											"Directory": {
+												"value": "@item().Directory",
+												"type": "Expression"
+											},
+											"Target_File_Extention": {
+												"value": "@item().Target_File_Extention",
+												"type": "Expression"
+											},
+											"Target_Name": {
+												"value": "@item().Target_Name",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"speccode": {
+						"type": "String",
+						"defaultValue": "SMCC4M001"
+					}
+				},
+				"variables": {
+					"TimeStamp": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "metadata"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-06T20:28:34Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/OB005_Child')]"
+			]
+		}
+	]
+}
