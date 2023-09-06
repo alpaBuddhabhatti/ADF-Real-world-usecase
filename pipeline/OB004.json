@@ -1,0 +1,63 @@
+{
+	"name": "OB004",
+	"properties": {
+		"activities": [
+			{
+				"name": "Full Load",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "OB004_CHILD_FULL",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"speccode": "OB004"
+					}
+				}
+			},
+			{
+				"name": "Delta Load",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Full Load",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "OB004_CHILD_DELTA",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"speccode": {
+							"value": "OB004",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"speccode": {
+				"type": "String",
+				"defaultValue": "OB004"
+			}
+		},
+		"variables": {
+			"TimeStamp": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-09-06T20:28:34Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

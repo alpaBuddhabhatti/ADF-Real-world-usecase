@@ -1,9 +1,199 @@
 {
 	"name": "OB001",
 	"properties": {
-		"folder": {
-			"name": "Metadata"
+		"description": "This pipeline run and execute SPs .",
+		"activities": [
+			{
+				"name": "Retrieve Config for OB001",
+				"description": "Retrieving config info for OB001 to execute sps",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * FROM stage.ADF_Config where Spec_Code = '@{pipeline().parameters.speccode}' ",
+							"type": "Expression"
+						},
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_ASQL",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL",
+					"type": "LinkedServiceReference"
+				},
+				"outputs": [
+					{
+						"name": "Configuration"
+					}
+				]
+			},
+			{
+				"name": "ForEach Table",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Retrieve Config for OB001",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Retrieve Config for OB001').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "If Condition1",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Get Source Name",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Set variable1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(item().Operation,'upsert')",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "OB1001 Execute SQL",
+										"type": "Script",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"linkedServiceName": {
+											"referenceName": "LS_ASQL",
+											"type": "LinkedServiceReference"
+										},
+										"typeProperties": {
+											"scripts": [
+												{
+													"type": "NonQuery",
+													"text": {
+														"value": "update @{variables('Source_Name')}  \n set status = 'Expired' \n where @{variables('Where_Condition')}            \n ",
+														"type": "Expression"
+													}
+												}
+											],
+											"scriptBlockExecutionTimeout": "02:00:00"
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Stored procedure",
+										"type": "SqlServerStoredProcedure",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"storedProcedureName": {
+												"value": "@variables('Source_Name')",
+												"type": "Expression"
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "LS_ASQL",
+											"type": "LinkedServiceReference"
+										}
+									}
+								]
+							}
+						},
+						{
+							"name": "Get Source Name",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Source_Name",
+								"value": {
+									"value": "@item().Source_Name",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set variable1",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Where_Condition",
+								"value": {
+									"value": "@item().Where_Condition",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"speccode": {
+				"type": "String",
+				"defaultValue": "OB001"
+			}
 		},
-		"annotations": []
-	}
+		"variables": {
+			"Source_Name": {
+				"type": "String"
+			},
+			"Where_Condition": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-09-06T20:28:34Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

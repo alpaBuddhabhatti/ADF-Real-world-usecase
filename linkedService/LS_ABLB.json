@@ -2,6 +2,7 @@
 	"name": "LS_ABLB",
 	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
+		"description": "Azure Blob Storage/Azure Data Lake Gen2 connection",
 		"annotations": [],
 		"type": "AzureBlobStorage",
 		"typeProperties": {
@@ -9,7 +10,7 @@
 			"accountKind": "StorageV2"
 		},
 		"connectVia": {
-			"referenceName": "ManagedIR",
+			"referenceName": "ManagedRuntime",
 			"type": "IntegrationRuntimeReference"
 		}
 	}

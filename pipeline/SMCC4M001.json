@@ -1,0 +1,114 @@
+{
+	"name": "SMCC4M001",
+	"properties": {
+		"description": "This pipeline extracts data to sftp for SMC.",
+		"activities": [
+			{
+				"name": "Retrieve Config for SMCC4M001",
+				"description": "Retrieving config info for SMCC4M001 to extract data to sftp",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * FROM stage.ADF_Config where Spec_Code = '@{pipeline().parameters.speccode}' and Operation ='full'",
+							"type": "Expression"
+						},
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_ASQL",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL",
+					"type": "LinkedServiceReference"
+				},
+				"outputs": [
+					{
+						"name": "Configuration"
+					}
+				]
+			},
+			{
+				"name": "ForEach Table",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Retrieve Config for SMCC4M001",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Retrieve Config for SMCC4M001').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 3,
+					"activities": [
+						{
+							"name": "Execute Pipeline",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "SMCC4M001_Child",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"SpecCode": "SMCC4M001",
+									"ViewName": {
+										"value": "@item().Source_Name",
+										"type": "Expression"
+									},
+									"Directory": {
+										"value": "@item().Directory",
+										"type": "Expression"
+									},
+									"Target_File_Extention": {
+										"value": "@item().Target_File_Extention",
+										"type": "Expression"
+									},
+									"Target_Name": {
+										"value": "@item().Target_Name",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"speccode": {
+				"type": "String",
+				"defaultValue": "SMCC4M001"
+			}
+		},
+		"variables": {
+			"TimeStamp": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-09-06T20:28:34Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

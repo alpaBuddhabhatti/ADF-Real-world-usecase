@@ -1,8 +1,8 @@
 {
-	"name": "DS_ABLB",
+	"name": "DS_ABLB_DP_OUT",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "LS_ABLB",
+			"referenceName": "LS_ABLB_DATAPLAT",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {

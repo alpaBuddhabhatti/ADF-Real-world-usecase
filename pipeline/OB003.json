@@ -1,9 +1,31 @@
 {
 	"name": "OB003",
 	"properties": {
-		"folder": {
-			"name": "Metadata"
-		},
-		"annotations": []
-	}
+		"activities": [
+			{
+				"name": "Clear Down - OB3",
+				"description": "Cleansing data from different tables",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[stage].[usp_Clean_Down_OB3]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2023-09-06T20:28:33Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

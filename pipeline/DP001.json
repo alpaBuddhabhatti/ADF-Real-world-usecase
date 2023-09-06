@@ -1,0 +1,171 @@
+{
+	"name": "DP001",
+	"properties": {
+		"description": "This pipeline extracts data for Data Platform.",
+		"activities": [
+			{
+				"name": "Retrieve Config for DP001",
+				"description": "Retrieving config info for DP001 to extract data platform for Reporting",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * FROM stage.ADF_Config where Spec_Code = '@{pipeline().parameters.speccode}' and Operation ='full'",
+							"type": "Expression"
+						},
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_ASQL",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL",
+					"type": "LinkedServiceReference"
+				},
+				"outputs": [
+					{
+						"name": "Configuration"
+					}
+				]
+			},
+			{
+				"name": "ForEach Table",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Retrieve Config for DP001",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "TimeStampt",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Retrieve Config for DP001').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 3,
+					"activities": [
+						{
+							"name": "Copy data",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "Select * from @{item().Source_Name}",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".csv"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ASQL",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ABLB_DP_OUT",
+									"type": "DatasetReference",
+									"parameters": {
+										"File_Name": {
+											"value": "@concat(item().Target_Name,'_',variables('TimeStamp'),item().Target_File_Extention)",
+											"type": "Expression"
+										},
+										"Folder_Name": {
+											"value": "@item().Directory",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "TimeStampt",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "TimeStamp",
+					"value": {
+						"value": "@substring(replace(replace(replace(pipeline().TriggerTime,'-',''),':',''),'T',''),0,15)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"speccode": {
+				"type": "String",
+				"defaultValue": "DP001"
+			}
+		},
+		"variables": {
+			"TimeStamp": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-09-06T20:28:34Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

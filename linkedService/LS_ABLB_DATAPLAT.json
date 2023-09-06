@@ -1,11 +1,12 @@
 {
-	"name": "LS_ASQL",
+	"name": "LS_ABLB_DATAPLAT",
 	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"annotations": [],
-		"type": "AzureSqlDatabase",
+		"type": "AzureBlobStorage",
 		"typeProperties": {
-			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=demo-asql-dev-etl.database.windows.net;Initial Catalog=DEMO-ASQL-DEV-ETL"
+			"serviceEndpoint": "https://demostoredevetl.blob.core.windows.net/",
+			"accountKind": "StorageV2"
 		},
 		"connectVia": {
 			"referenceName": "ManagedRuntime",

@@ -1,0 +1,187 @@
+{
+	"name": "SMCC4M001_Child",
+	"properties": {
+		"description": "This pipeline extracts data to sftp for SMC.",
+		"activities": [
+			{
+				"name": "Retrieve Market",
+				"description": "Retrieving config info for SMCC4M001 to extract data to sftp",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT [market_id]\n ,[tbs_market_code]\n ,[market_name]\nFROM [Customer].[Market]",
+							"type": "Expression"
+						},
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_ASQL",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL",
+					"type": "LinkedServiceReference"
+				},
+				"outputs": [
+					{
+						"name": "Configuration"
+					}
+				]
+			},
+			{
+				"name": "ForEach Table",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Retrieve Market",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "TimeStampt",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Retrieve Market').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 3,
+					"activities": [
+						{
+							"name": "Copy data",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "Select * from @{pipeline().parameters.ViewName} where Country_Name = '@{item().market_name}'",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings",
+										"maxConcurrentConnections": 1
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".csv"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ASQL",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ABLB_SFTP",
+									"type": "DatasetReference",
+									"parameters": {
+										"File_Name": {
+											"value": "@concat(pipeline().parameters.Target_Name,'_',item().market_name,'_',variables('TimeStamp'),'.',pipeline().parameters.Target_File_Extention)",
+											"type": "Expression"
+										},
+										"Folder_Name": {
+											"value": "@pipeline().parameters.Directory",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "TimeStampt",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "TimeStamp",
+					"value": {
+						"value": "@substring(replace(replace(replace(pipeline().TriggerTime,'-',''),':',''),'T',''),0,15)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"SpecCode": {
+				"type": "String",
+				"defaultValue": "SMCC4M001"
+			},
+			"ViewName": {
+				"type": "string"
+			},
+			"Directory": {
+				"type": "string"
+			},
+			"Target_File_Extention": {
+				"type": "string"
+			},
+			"Target_Name": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"TimeStamp": {
+				"type": "String"
+			},
+			"value": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-09-06T20:28:34Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

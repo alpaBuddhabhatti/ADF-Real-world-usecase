@@ -7,10 +7,85 @@
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",
-		"schema": [],
+		"schema": [
+			{
+				"name": "account_history_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "account_history_date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "customer_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "tbs_customer_id",
+				"type": "varchar"
+			},
+			{
+				"name": "market_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "days_account_open",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "date_of_birth",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "email",
+				"type": "varchar"
+			},
+			{
+				"name": "end_date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "start_date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "account_status_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "status_date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "tier_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "tier_change_date",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
 		"typeProperties": {
-			"schema": "dbo",
-			"table": "movieDB"
+			"schema": "Customer",
+			"table": "Account_ID_History"
 		}
 	},
 	"type": "Microsoft.DataFactory/factories/datasets"

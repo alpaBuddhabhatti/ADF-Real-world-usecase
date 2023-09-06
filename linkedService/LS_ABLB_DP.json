@@ -1,0 +1,19 @@
+{
+	"name": "LS_ABLB_DP",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "Data Platform Storage Account as sink/destination ",
+		"annotations": [],
+		"type": "AzureBlobStorage",
+		"typeProperties": {
+			"sasUri": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_KV",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "ABLB-DP-SAS"
+			}
+		}
+	}
+}
