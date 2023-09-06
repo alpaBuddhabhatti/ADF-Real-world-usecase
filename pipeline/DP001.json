@@ -164,6 +164,9 @@
 				"type": "String"
 			}
 		},
+		"folder": {
+			"name": "metadata"
+		},
 		"annotations": [],
 		"lastPublishTime": "2023-09-06T20:28:34Z"
 	},
