@@ -1,5 +1,5 @@
 {
-	"name": "DP001",
+	"name": "OB001_2",
 	"properties": {
 		"description": "This pipeline extracts data for Data Platform.",
 		"activities": [
