@@ -9,15 +9,7 @@
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobStorageLocation",
-				"fileName": {
-					"value": "@dataset().File_Name",
-					"type": "Expression"
-				},
-				"container": {
-					"value": "@dataset().Folder_Name",
-					"type": "Expression"
-				}
+				"type": "AzureBlobStorageLocation"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
