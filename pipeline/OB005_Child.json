@@ -1,5 +1,5 @@
 {
-	"name": "SMCC4M001_Child",
+	"name": "OB005_Child",
 	"properties": {
 		"description": "This pipeline extracts data to sftp for SMC.",
 		"activities": [

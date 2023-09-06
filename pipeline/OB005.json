@@ -1,5 +1,5 @@
 {
-	"name": "SMCC4M001",
+	"name": "OB005",
 	"properties": {
 		"description": "This pipeline extracts data to sftp for SMC.",
 		"activities": [
@@ -67,7 +67,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "SMCC4M001_Child",
+									"referenceName": "OB005_Child",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
