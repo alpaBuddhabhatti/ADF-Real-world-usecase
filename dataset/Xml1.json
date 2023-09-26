@@ -10,7 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": "File1.xml",
+				"fileName": "1.xml",
 				"container": "xmldemo"
 			}
 		}
