@@ -13,7 +13,11 @@
 				}
 			],
 			"sinks": [],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          {_corrupt_record} as string",
@@ -22,7 +26,8 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     validationMode: 'none',",
-				"     namespaces: true) ~> source1"
+				"     namespaces: true) ~> source1",
+				"source1 derive(datetime = ERROR_FUNCTION('')) ~> derivedColumn1"
 			]
 		}
 	}

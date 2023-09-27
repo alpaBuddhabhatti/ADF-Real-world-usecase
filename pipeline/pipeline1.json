@@ -1,0 +1,57 @@
+{
+	"name": "pipeline1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "time",
+					"value": {
+						"value": "@pipeline().TriggerTime",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable2",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set variable1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "new",
+					"value": {
+						"value": "@substring(replace(replace(pipeline().TriggerTime,'-','/'),'T',' '),0,19)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"time": {
+				"type": "String"
+			},
+			"new": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}
