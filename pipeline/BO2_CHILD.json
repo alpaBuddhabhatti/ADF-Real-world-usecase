@@ -1,0 +1,50 @@
+{
+	"name": "BO2_CHILD",
+	"properties": {
+		"parameters": {
+			"Source_Name": {
+				"type": "string"
+			},
+			"Where_Condition": {
+				"type": "string"
+			},
+			"Spec_Code": {
+				"type": "string"
+			},
+			"Field_List": {
+				"type": "string"
+			},
+			"Directory": {
+				"type": "string"
+			},
+			"Target_Name": {
+				"type": "string"
+			},
+			"Target_File_Extention": {
+				"type": "string"
+			},
+			"Is_EmailFunNeeded": {
+				"type": "string"
+			},
+			"Source_Type": {
+				"type": "string"
+			},
+			"Target_Type": {
+				"type": "string"
+			},
+			"Operation": {
+				"type": "string"
+			},
+			"MinWindowStartValue": {
+				"type": "string"
+			},
+			"SpecCodeId": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Metadata V2"
+		},
+		"annotations": []
+	}
+}
