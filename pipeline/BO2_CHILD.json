@@ -267,7 +267,7 @@
 									{
 										"type": "Query",
 										"text": {
-											"value": "Select * from config.PipelinesEmail_Config where SpecCodeId =9",
+											"value": "Select * from config.PipelinesEmail_Config where SpecCodeId =@{pipeline().parameters.SpecCodeId}",
 											"type": "Expression"
 										}
 									}
