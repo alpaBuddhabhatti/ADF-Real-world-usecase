@@ -17,7 +17,7 @@
 							"value": "full",
 							"activities": [
 								{
-									"name": "Copy data1",
+									"name": "Full Load",
 									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
