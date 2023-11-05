@@ -85,7 +85,111 @@
 							]
 						},
 						{
-							"value": "delta"
+							"value": "delta",
+							"activities": [
+								{
+									"name": "Delta Load",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "select @{pipeline().parameters.Field_List} from @{pipeline().parameters.Source_Name} ",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "AzureSqlTable3",
+											"type": "DatasetReference"
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DelimitedText3",
+											"type": "DatasetReference",
+											"parameters": {
+												"filename": {
+													"value": "@concat(pipeline().parameters.Target_Name,'.',pipeline().parameters.Target_File_Extention)",
+													"type": "Expression"
+												},
+												"Directory": {
+													"value": "@pipeline().parameters.Directory",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Setting MinWindowStartValue up for Next",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "Delta Load",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "AzureSqlDatabase2",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "update  [config].[Pipeline_DeltaLoad]\nset MinWindowStartValue = (\nselect CASE WHEN  (max (@{pipeline().parameters.Where_Condition})>0) THEN max (@{pipeline().parameters.Where_Condition}) ELSE 0 END from @{pipeline().parameters.Source_Name}),\nLastProcessedTimestamp = getdate()\nwhere SpecCodeId = @{pipeline().parameters.SpecCodeId}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
 						},
 						{
 							"value": "delete",
