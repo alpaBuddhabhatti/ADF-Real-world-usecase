@@ -103,7 +103,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "select @{pipeline().parameters.Field_List} from @{pipeline().parameters.Source_Name} ",
+												"value": "select @{pipeline().parameters.Field_List} from @{pipeline().parameters.Source_Name} where pipeline().parameters.Where_Condition > pipeline().parameters.Min_Window_StartValue",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
@@ -181,7 +181,7 @@
 											{
 												"type": "Query",
 												"text": {
-													"value": "update  [config].[Pipeline_DeltaLoad]\nset MinWindowStartValue = (\nselect CASE WHEN  (max (@{pipeline().parameters.Where_Condition})>0) THEN max (@{pipeline().parameters.Where_Condition}) ELSE 0 END from @{pipeline().parameters.Source_Name}),\nLastProcessedTimestamp = getdate()\nwhere SpecCodeId = @{pipeline().parameters.SpecCodeId}",
+													"value": "update  [config].[Pipeline_DeltaLoad]\nset MinWindowStartValue = (\nselect CASE WHEN  (max (@{pipeline().parameters.Where_Condition})>0) THEN max (@{pipeline().parameters.Where_Condition}) ELSE 0 END from @{pipeline().parameters.Source_Name}),\nLastProcessedTimestamp = getdate()\nwhere SpecCodeId = @{pipeline().parameters.Spec_Code_Id}",
 													"type": "Expression"
 												}
 											}
@@ -267,7 +267,7 @@
 									{
 										"type": "Query",
 										"text": {
-											"value": "Select * from config.PipelinesEmail_Config where SpecCodeId =@{pipeline().parameters.SpecCodeId}",
+											"value": "Select * from config.PipelinesEmail_Config where SpecCodeId =@{pipeline().parameters.Spec_Code_Id}",
 											"type": "Expression"
 										}
 									}
