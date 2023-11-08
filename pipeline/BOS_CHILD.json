@@ -103,7 +103,7 @@
 										"source": {
 											"type": "AzureSqlSource",
 											"sqlReaderQuery": {
-												"value": "select @{pipeline().parameters.Field_List} from @{pipeline().parameters.Source_Name} where pipeline().parameters.Where_Condition > pipeline().parameters.Min_Window_StartValue",
+												"value": "select @{pipeline().parameters.Field_List} \nfrom @{pipeline().parameters.Source_Name} \nwhere @{pipeline().parameters.Where_Condition} > @{pipeline().parameters.Min_Window_StartValue}\n\n",
 												"type": "Expression"
 											},
 											"queryTimeout": "02:00:00",
