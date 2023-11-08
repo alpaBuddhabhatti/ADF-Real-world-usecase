@@ -61,7 +61,7 @@
 									},
 									"inputs": [
 										{
-											"referenceName": "AzureSqlTable3",
+											"referenceName": "DS_ASQL_BOS",
 											"type": "DatasetReference"
 										}
 									],
@@ -132,7 +132,7 @@
 									},
 									"inputs": [
 										{
-											"referenceName": "AzureSqlTable3",
+											"referenceName": "DS_ASQL_BOS",
 											"type": "DatasetReference"
 										}
 									],

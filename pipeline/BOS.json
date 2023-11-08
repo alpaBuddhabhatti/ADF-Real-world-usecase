@@ -114,7 +114,7 @@
 						"partitionOption": "None"
 					},
 					"dataset": {
-						"referenceName": "AzureSqlTable2",
+						"referenceName": "DS_Config",
 						"type": "DatasetReference"
 					},
 					"firstRowOnly": false
