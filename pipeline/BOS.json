@@ -107,7 +107,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "SELECT pc.* ,\n    SpecCodeId,\n    MinWindowStartValue\nFROM [config].[Pipelines_Config] pc left join [config].[Pipeline_DeltaLoad] dpd\non pc.id = dpd.SpecCodeId\nwhere SpecCode = @{pipeline().parameters.speccode}\n",
+							"value": "SELECT pc.* ,\n    SpecCodeId,\n    MinWindowStartValue\nFROM [config].[Pipelines_Config] pc left join [config].[Pipeline_DeltaLoad] dpd\non pc.id = dpd.SpecCodeId\nwhere SpecCode = '@{pipeline().parameters.speccode}'\n",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
