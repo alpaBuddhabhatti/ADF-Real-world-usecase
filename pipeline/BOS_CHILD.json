@@ -313,10 +313,10 @@
 			"Operation": {
 				"type": "string"
 			},
-			"MinWindowStartValue": {
+			"Min_Window_StartValue": {
 				"type": "string"
 			},
-			"SpecCodeId": {
+			"Spec_Code_Id": {
 				"type": "string"
 			}
 		},
