@@ -77,78 +77,11 @@
 										"value": "@item().Operation",
 										"type": "Expression"
 									},
-									"MinWindowStartValue": {
+									"Min_Window_StartValue": {
 										"value": "@item().MinWindowStartValue",
 										"type": "Expression"
 									},
-									"SpecCodeId": {
-										"value": "@item().SpecCodeId",
-										"type": "Expression"
-									}
-								}
-							}
-						},
-						{
-							"name": "Execute Pipeline _copy1",
-							"type": "ExecutePipeline",
-							"dependsOn": [],
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "BOS_CHILD",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"Source_Name": {
-										"value": "@item().SourceName",
-										"type": "Expression"
-									},
-									"Where_Condition": {
-										"value": "@item().WhereCondition",
-										"type": "Expression"
-									},
-									"Spec_Code": {
-										"value": "@item().SpecCode",
-										"type": "Expression"
-									},
-									"Field_List": {
-										"value": "@item().FieldList",
-										"type": "Expression"
-									},
-									"Directory": {
-										"value": "@item().Directory",
-										"type": "Expression"
-									},
-									"Target_Name": {
-										"value": "@item().TargetName",
-										"type": "Expression"
-									},
-									"Target_File_Extention": {
-										"value": "@item().TargetFileExtention",
-										"type": "Expression"
-									},
-									"Is_EmailFunNeeded": {
-										"value": "@item().IsEmailFunNeeded",
-										"type": "Expression"
-									},
-									"Source_Type": {
-										"value": "@item().SourceType",
-										"type": "Expression"
-									},
-									"Target_Type": {
-										"value": "@item().TargetType",
-										"type": "Expression"
-									},
-									"Operation": {
-										"value": "@item().Operation",
-										"type": "Expression"
-									},
-									"MinWindowStartValue": {
-										"value": "@item().MinWindowStartValue",
-										"type": "Expression"
-									},
-									"SpecCodeId": {
+									"Spec_Code_Id": {
 										"value": "@item().SpecCodeId",
 										"type": "Expression"
 									}
