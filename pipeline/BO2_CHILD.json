@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Switch1",
+				"name": "Based operation",
 				"type": "Switch",
 				"dependsOn": [],
 				"userProperties": [],
@@ -229,11 +229,11 @@
 				}
 			},
 			{
-				"name": "If Condition1",
+				"name": "If  Email functionality needed",
 				"type": "IfCondition",
 				"dependsOn": [
 					{
-						"activity": "Switch1",
+						"activity": "Based operation",
 						"dependencyConditions": [
 							"Succeeded"
 						]
