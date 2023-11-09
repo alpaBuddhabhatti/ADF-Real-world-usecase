@@ -2,7 +2,7 @@
 	"name": "DS_ABLB_BOS",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "AzureBlobStorage2",
+			"referenceName": "LS_ABLB_BOS",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {

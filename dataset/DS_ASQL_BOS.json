@@ -2,7 +2,7 @@
 	"name": "DS_ASQL_BOS",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "AzureSqlDatabase2",
+			"referenceName": "LS_ASQL_BOS",
 			"type": "LinkedServiceReference"
 		},
 		"annotations": [],
