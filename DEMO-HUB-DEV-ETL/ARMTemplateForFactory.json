@@ -7,10 +7,18 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "DEMO-HUB-DEV-ETL"
 		},
+		"LS_ABLB_BOS_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_ABLB_BOS'"
+		},
 		"LS_ASQL_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_ASQL'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=demo-asql-dev-etl.database.windows.net;Initial Catalog=DEMO-ASQL-DEV-ETL"
+		},
+		"LS_ASQL_BOS_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_ASQL_BOS'"
 		},
 		"LS_ABLB_properties_typeProperties_serviceEndpoint": {
 			"type": "string",
@@ -20,17 +28,9 @@
 			"type": "string",
 			"defaultValue": "https://demostoredevetl.blob.core.windows.net/"
 		},
-		"LS_ABLB_DP_properties_typeProperties_sasUri_secretName": {
-			"type": "string",
-			"defaultValue": "ABLB-DP-SAS"
-		},
 		"LS_ABLB_SFTP_properties_typeProperties_serviceEndpoint": {
 			"type": "string",
 			"defaultValue": "https://demostoredevetl.blob.core.windows.net/"
-		},
-		"LS_KV_properties_typeProperties_baseUrl": {
-			"type": "string",
-			"defaultValue": "https://AZDEV-KV.vault.azure.net/"
 		},
 		"ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
 			"type": "string",
@@ -65,6 +65,490 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/BOS')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEach",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Retrieve Config for BOS",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Retrieve Config for BOS').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Execute Pipeline",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "BOS_CHILD",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"Source_Name": {
+												"value": "@item().SourceName",
+												"type": "Expression"
+											},
+											"Where_Condition": {
+												"value": "@item().WhereCondition",
+												"type": "Expression"
+											},
+											"Spec_Code": {
+												"value": "@item().SpecCode",
+												"type": "Expression"
+											},
+											"Field_List": {
+												"value": "@item().FieldList",
+												"type": "Expression"
+											},
+											"Directory": {
+												"value": "@item().Directory",
+												"type": "Expression"
+											},
+											"Target_Name": {
+												"value": "@item().TargetName",
+												"type": "Expression"
+											},
+											"Target_File_Extention": {
+												"value": "@item().TargetFileExtention",
+												"type": "Expression"
+											},
+											"Is_EmailFunNeeded": {
+												"value": "@item().IsEmailFunNeeded",
+												"type": "Expression"
+											},
+											"Source_Type": {
+												"value": "@item().SourceType",
+												"type": "Expression"
+											},
+											"Target_Type": {
+												"value": "@item().TargetType",
+												"type": "Expression"
+											},
+											"Operation": {
+												"value": "@item().Operation",
+												"type": "Expression"
+											},
+											"Min_Window_StartValue": {
+												"value": "@item().MinWindowStartValue",
+												"type": "Expression"
+											},
+											"Spec_Code_Id": {
+												"value": "@item().SpecCodeId",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Retrieve Config for BOS",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT pc.* ,\n    SpecCodeId,\n    MinWindowStartValue\nFROM [config].[Pipelines_Config] pc left join [config].[Pipeline_DeltaLoad] dpd\non pc.id = dpd.SpecCodeId\nwhere SpecCode = '@{pipeline().parameters.speccode}'\n",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_Config",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"speccode": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Metadata V2"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_Config')]",
+				"[concat(variables('factoryId'), '/pipelines/BOS_CHILD')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/BOS_CHILD')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Based operation",
+						"type": "Switch",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"on": {
+								"value": "@pipeline().parameters.Operation",
+								"type": "Expression"
+							},
+							"cases": [
+								{
+									"value": "full",
+									"activities": [
+										{
+											"name": "Full Load",
+											"type": "Copy",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "AzureSqlSource",
+													"sqlReaderQuery": {
+														"value": "select @{pipeline().parameters.Field_List} from @{pipeline().parameters.Source_Name} ",
+														"type": "Expression"
+													},
+													"queryTimeout": "02:00:00",
+													"partitionOption": "None"
+												},
+												"sink": {
+													"type": "DelimitedTextSink",
+													"storeSettings": {
+														"type": "AzureBlobStorageWriteSettings"
+													},
+													"formatSettings": {
+														"type": "DelimitedTextWriteSettings",
+														"quoteAllText": true,
+														"fileExtension": ".txt"
+													}
+												},
+												"enableStaging": false,
+												"translator": {
+													"type": "TabularTranslator",
+													"typeConversion": true,
+													"typeConversionSettings": {
+														"allowDataTruncation": true,
+														"treatBooleanAsNumber": false
+													}
+												}
+											},
+											"inputs": [
+												{
+													"referenceName": "DS_ASQL_BOS",
+													"type": "DatasetReference",
+													"parameters": {}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "DS_ABLB_BOS",
+													"type": "DatasetReference",
+													"parameters": {
+														"filename": {
+															"value": "@concat(pipeline().parameters.Target_Name,'.',pipeline().parameters.Target_File_Extention)",
+															"type": "Expression"
+														},
+														"Directory": {
+															"value": "@pipeline().parameters.Directory",
+															"type": "Expression"
+														}
+													}
+												}
+											]
+										}
+									]
+								},
+								{
+									"value": "delta",
+									"activities": [
+										{
+											"name": "Delta Load",
+											"type": "Copy",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "AzureSqlSource",
+													"sqlReaderQuery": {
+														"value": "select @{pipeline().parameters.Field_List} \nfrom @{pipeline().parameters.Source_Name} \nwhere @{pipeline().parameters.Where_Condition} > @{pipeline().parameters.Min_Window_StartValue}\n\n",
+														"type": "Expression"
+													},
+													"queryTimeout": "02:00:00",
+													"partitionOption": "None"
+												},
+												"sink": {
+													"type": "DelimitedTextSink",
+													"storeSettings": {
+														"type": "AzureBlobStorageWriteSettings"
+													},
+													"formatSettings": {
+														"type": "DelimitedTextWriteSettings",
+														"quoteAllText": true,
+														"fileExtension": ".txt"
+													}
+												},
+												"enableStaging": false,
+												"translator": {
+													"type": "TabularTranslator",
+													"typeConversion": true,
+													"typeConversionSettings": {
+														"allowDataTruncation": true,
+														"treatBooleanAsNumber": false
+													}
+												}
+											},
+											"inputs": [
+												{
+													"referenceName": "DS_ASQL_BOS",
+													"type": "DatasetReference",
+													"parameters": {}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "DS_ABLB_BOS",
+													"type": "DatasetReference",
+													"parameters": {
+														"filename": {
+															"value": "@concat(pipeline().parameters.Target_Name,'.',pipeline().parameters.Target_File_Extention)",
+															"type": "Expression"
+														},
+														"Directory": {
+															"value": "@pipeline().parameters.Directory",
+															"type": "Expression"
+														}
+													}
+												}
+											]
+										},
+										{
+											"name": "Setting MinWindowStartValue up for Next",
+											"type": "Script",
+											"dependsOn": [
+												{
+													"activity": "Delta Load",
+													"dependencyConditions": [
+														"Succeeded"
+													]
+												}
+											],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"linkedServiceName": {
+												"referenceName": "LS_ASQL_BOS",
+												"type": "LinkedServiceReference"
+											},
+											"typeProperties": {
+												"scripts": [
+													{
+														"type": "Query",
+														"text": {
+															"value": "update  [config].[Pipeline_DeltaLoad]\nset MinWindowStartValue = (\nselect CASE WHEN  (max (@{pipeline().parameters.Where_Condition})>0) THEN max (@{pipeline().parameters.Where_Condition}) ELSE 0 END from @{pipeline().parameters.Source_Name}),\nLastProcessedTimestamp = getdate()\nwhere SpecCodeId = @{pipeline().parameters.Spec_Code_Id}",
+															"type": "Expression"
+														}
+													}
+												],
+												"scriptBlockExecutionTimeout": "02:00:00"
+											}
+										}
+									]
+								},
+								{
+									"value": "delete",
+									"activities": [
+										{
+											"name": "Delete Operation",
+											"type": "Script",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"linkedServiceName": {
+												"referenceName": "LS_ASQL_BOS",
+												"type": "LinkedServiceReference"
+											},
+											"typeProperties": {
+												"scripts": [
+													{
+														"type": "Query",
+														"text": {
+															"value": "delete from @{pipeline().parameters.Source_Name} where @{pipeline().parameters.Where_Condition}",
+															"type": "Expression"
+														}
+													}
+												],
+												"scriptBlockExecutionTimeout": "02:00:00"
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "If  Email functionality needed",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Based operation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(pipeline().parameters.Is_EmailFunNeeded,true)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Get Email Details",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "LS_ASQL_BOS",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "Select * from config.PipelinesEmail_Config where SpecCodeId =@{pipeline().parameters.Spec_Code_Id}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Source_Name": {
+						"type": "string"
+					},
+					"Where_Condition": {
+						"type": "string"
+					},
+					"Spec_Code": {
+						"type": "string"
+					},
+					"Field_List": {
+						"type": "string"
+					},
+					"Directory": {
+						"type": "string"
+					},
+					"Target_Name": {
+						"type": "string"
+					},
+					"Target_File_Extention": {
+						"type": "string"
+					},
+					"Is_EmailFunNeeded": {
+						"type": "string"
+					},
+					"Source_Type": {
+						"type": "string"
+					},
+					"Target_Type": {
+						"type": "string"
+					},
+					"Operation": {
+						"type": "string"
+					},
+					"Min_Window_StartValue": {
+						"type": "string"
+					},
+					"Spec_Code_Id": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Metadata V2"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ASQL_BOS')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ASQL_BOS')]",
+				"[concat(variables('factoryId'), '/datasets/DS_ABLB_BOS')]"
+			]
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/MOVE001')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -129,8 +613,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"annotations": [],
 				"lastPublishTime": "2023-08-29T21:05:10Z"
@@ -324,8 +807,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"speccode": {
@@ -512,8 +994,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"speccode": {
@@ -587,8 +1068,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"speccode": {
@@ -807,8 +1287,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"speccode": {
@@ -992,8 +1471,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"speccode": {
@@ -1119,8 +1597,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"speccode": {
@@ -1305,8 +1782,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"SpecCode": {
@@ -1371,6 +1847,48 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_ABLB')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_ABLB_BOS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ABLB_BOS",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"filename": {
+						"type": "string"
+					},
+					"Directory": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().filename",
+							"type": "Expression"
+						},
+						"container": {
+							"value": "@dataset().Directory",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ABLB_BOS')]"
 			]
 		},
 		{
@@ -1554,6 +2072,42 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_ASQL_BOS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL_BOS",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ASQL_BOS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Config')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ASQL_BOS",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ASQL_BOS')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/LS_ABLB')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -1575,6 +2129,19 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/LS_ABLB_BOS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_ABLB_BOS_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/LS_ABLB_DATAPLAT')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -1592,29 +2159,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/ManagedRuntime')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/LS_ABLB_DP')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Data Platform Storage Account as sink/destination ",
-				"annotations": [],
-				"type": "AzureBlobStorage",
-				"typeProperties": {
-					"sasUri": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "LS_KV",
-							"type": "LinkedServiceReference"
-						},
-						"secretName": "[parameters('LS_ABLB_DP_properties_typeProperties_sasUri_secretName')]"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_KV')]"
 			]
 		},
 		{
@@ -1657,14 +2201,14 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/LS_KV')]",
+			"name": "[concat(parameters('factoryName'), '/LS_ASQL_BOS')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"type": "AzureKeyVault",
+				"type": "AzureSqlDatabase",
 				"typeProperties": {
-					"baseUrl": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
+					"connectionString": "[parameters('LS_ASQL_BOS_connectionString')]"
 				}
 			},
 			"dependsOn": []

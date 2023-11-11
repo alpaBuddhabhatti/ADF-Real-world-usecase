@@ -7,10 +7,18 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "DEMO-HUB-DEV-ETL"
 		},
+		"LS_ABLB_BOS_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_ABLB_BOS'"
+		},
 		"LS_ASQL_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_ASQL'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=demo-asql-dev-etl.database.windows.net;Initial Catalog=DEMO-ASQL-DEV-ETL"
+		},
+		"LS_ASQL_BOS_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_ASQL_BOS'"
 		},
 		"LS_ABLB_properties_typeProperties_serviceEndpoint": {
 			"type": "string",
@@ -20,17 +28,9 @@
 			"type": "string",
 			"defaultValue": "https://demostoredevetl.blob.core.windows.net/"
 		},
-		"LS_ABLB_DP_properties_typeProperties_sasUri_secretName": {
-			"type": "string",
-			"defaultValue": "ABLB-DP-SAS"
-		},
 		"LS_ABLB_SFTP_properties_typeProperties_serviceEndpoint": {
 			"type": "string",
 			"defaultValue": "https://demostoredevetl.blob.core.windows.net/"
-		},
-		"LS_KV_properties_typeProperties_baseUrl": {
-			"type": "string",
-			"defaultValue": "https://AZDEV-KV.vault.azure.net/"
 		},
 		"ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
 			"type": "string",
@@ -87,14 +87,14 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"LS_ABLB_BOS_connectionString": {
+						"value": "[parameters('LS_ABLB_BOS_connectionString')]"
+					},
+					"LS_ASQL_BOS_connectionString": {
+						"value": "[parameters('LS_ASQL_BOS_connectionString')]"
+					},
 					"LS_ASQL_connectionString": {
 						"value": "[parameters('LS_ASQL_connectionString')]"
-					},
-					"LS_KV_properties_typeProperties_baseUrl": {
-						"value": "[parameters('LS_KV_properties_typeProperties_baseUrl')]"
-					},
-					"LS_ABLB_DP_properties_typeProperties_sasUri_secretName": {
-						"value": "[parameters('LS_ABLB_DP_properties_typeProperties_sasUri_secretName')]"
 					},
 					"ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
 						"value": "[parameters('ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId')]"

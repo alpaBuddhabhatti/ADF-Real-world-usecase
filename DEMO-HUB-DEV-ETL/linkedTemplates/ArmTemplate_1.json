@@ -13,6 +13,862 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/MOVE001')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_ABLB",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ASQL",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-08-29T21:05:10Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/OB001')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This pipeline run and execute SPs .",
+				"activities": [
+					{
+						"name": "Retrieve Config for OB001",
+						"description": "Retrieving config info for OB001 to execute sps",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT * FROM stage.ADF_Config where Spec_Code = '@{pipeline().parameters.speccode}' ",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_ASQL",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASQL",
+							"type": "LinkedServiceReference"
+						},
+						"outputs": [
+							{
+								"name": "Configuration"
+							}
+						]
+					},
+					{
+						"name": "ForEach Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Retrieve Config for OB001",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Retrieve Config for OB001').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "If Condition1",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "Get Source Name",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										},
+										{
+											"activity": "Get WhereCondition",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@equals(item().Operation,'upsert')",
+											"type": "Expression"
+										},
+										"ifFalseActivities": [
+											{
+												"name": "OB1001 Execute SQL",
+												"type": "Script",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"linkedServiceName": {
+													"referenceName": "LS_ASQL",
+													"type": "LinkedServiceReference"
+												},
+												"typeProperties": {
+													"scripts": [
+														{
+															"type": "NonQuery",
+															"text": {
+																"value": "update @{variables('Source_Name')}  \n set status = 'Expired' \n where @{variables('Where_Condition')}            \n ",
+																"type": "Expression"
+															}
+														}
+													],
+													"scriptBlockExecutionTimeout": "02:00:00"
+												}
+											}
+										],
+										"ifTrueActivities": [
+											{
+												"name": "Stored procedure",
+												"type": "SqlServerStoredProcedure",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "0.12:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"storedProcedureName": {
+														"value": "@variables('Source_Name')",
+														"type": "Expression"
+													}
+												},
+												"linkedServiceName": {
+													"referenceName": "LS_ASQL",
+													"type": "LinkedServiceReference"
+												}
+											}
+										]
+									}
+								},
+								{
+									"name": "Get Source Name",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Source_Name",
+										"value": {
+											"value": "@item().Source_Name",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Get WhereCondition",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Where_Condition",
+										"value": {
+											"value": "@item().Where_Condition",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"speccode": {
+						"type": "String",
+						"defaultValue": "OB001"
+					}
+				},
+				"variables": {
+					"Source_Name": {
+						"type": "String"
+					},
+					"Where_Condition": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "metadata"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-06T20:28:34Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/OB001_2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This pipeline extracts data for Data Platform.",
+				"activities": [
+					{
+						"name": "Retrieve Config for DP001",
+						"description": "Retrieving config info for DP001 to extract data platform for Reporting",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT * FROM stage.ADF_Config where Spec_Code = '@{pipeline().parameters.speccode}' and Operation ='full'",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_ASQL",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASQL",
+							"type": "LinkedServiceReference"
+						},
+						"outputs": [
+							{
+								"name": "Configuration"
+							}
+						]
+					},
+					{
+						"name": "ForEach Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Retrieve Config for DP001",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "TimeStampt",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Retrieve Config for DP001').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 3,
+							"activities": [
+								{
+									"name": "Copy data",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "Select * from @{item().Source_Name}",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".csv"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_ASQL",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ABLB_DP_OUT",
+											"type": "DatasetReference",
+											"parameters": {
+												"File_Name": {
+													"value": "@concat(item().Target_Name,'_',variables('TimeStamp'),item().Target_File_Extention)",
+													"type": "Expression"
+												},
+												"Folder_Name": {
+													"value": "@item().Directory",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "TimeStampt",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "TimeStamp",
+							"value": {
+								"value": "@substring(replace(replace(replace(pipeline().TriggerTime,'-',''),':',''),'T',''),0,15)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"speccode": {
+						"type": "String",
+						"defaultValue": "DP001"
+					}
+				},
+				"variables": {
+					"TimeStamp": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "metadata"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-06T20:28:34Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/OB004_CHILD_DELTA')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Retrieve Config for OB4001",
+						"description": "Retrieving config info for OB4001 to extract data for Data Platform",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "select \nac.*,\nSpec_Code_Id,\n    Min_Window_Start_Value\nfrom [stage].[ADF_Config] ac  join [stage].[ADF_Delta_Pipelines_Detail] dpd\non ac.id = dpd.Spec_Code_Id\nwhere ac.Spec_Code = '@{pipeline().parameters.speccode}' and ac.Operation ='delta'",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_ASQL",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASQL",
+							"type": "LinkedServiceReference"
+						},
+						"outputs": [
+							{
+								"name": "Configuration"
+							}
+						]
+					},
+					{
+						"name": "ForEach Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Retrieve Config for OB4001",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "TimeStampt",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Retrieve Config for OB4001').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy data - Delta Load",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "@concat('Select * from ', item().Source_Name , ' where ',item().Where_Condition , '>' , item().Min_Window_Start_Value)",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".csv"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_ASQL",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ABLB_SFTP",
+											"type": "DatasetReference",
+											"parameters": {
+												"File_Name": {
+													"value": "@concat(item().Target_Name,'_',variables('TimeStamp'),item().Target_File_Extention)\n",
+													"type": "Expression"
+												},
+												"Folder_Name": {
+													"value": "@item().Directory",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Update Max Record Id",
+									"description": "This task will update table for delta load.\nIt set max id from table and update to config table Min Window Start value for Delta Load Next time.",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "Copy data - Delta Load",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "LS_ASQL",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "update  [stage].[ADF_Delta_Pipelines_Detail]\nset Min_Window_Start_Value = (\nselect CASE WHEN  (max (@{item().Where_Condition})>0) THEN max (@{item().Where_Condition}) ELSE 0 END from @{item().Source_Name}),\nLast_Processed_Timestamp = getdate()\nwhere Spec_Code_Id = @{item().Spec_Code_Id}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "TimeStampt",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "TimeStamp",
+							"value": {
+								"value": "@substring(replace(replace(replace(pipeline().TriggerTime,'-',''),':',''),'T',''),0,15)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"speccode": {
+						"type": "String",
+						"defaultValue": "OB004"
+					}
+				},
+				"variables": {
+					"TimeStamp": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "metadata"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-06T20:28:34Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/OB004_CHILD_FULL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Retrieve Config for OB4001",
+						"description": "Retrieving config info for OB4001 to extract data for Data Platform",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT * FROM stage.ADF_Config where Spec_Code = '@{pipeline().parameters.speccode}' and Operation ='full'",
+									"type": "Expression"
+								},
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "DS_ASQL",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						},
+						"linkedServiceName": {
+							"referenceName": "LS_ASQL",
+							"type": "LinkedServiceReference"
+						},
+						"outputs": [
+							{
+								"name": "Configuration"
+							}
+						]
+					},
+					{
+						"name": "ForEach Table",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Retrieve Config for OB4001",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "TimeStampt",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Retrieve Config for OB4001').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 3,
+							"activities": [
+								{
+									"name": "Copy data - Full Load",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "Select * from @{item().Source_Name}",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".csv"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_ASQL",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "DS_ABLB_SFTP",
+											"type": "DatasetReference",
+											"parameters": {
+												"File_Name": {
+													"value": "@concat(item().Target_Name,'_',variables('TimeStamp'),item().Target_File_Extention)\n",
+													"type": "Expression"
+												},
+												"Folder_Name": {
+													"value": "@item().Directory",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "TimeStampt",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "TimeStamp",
+							"value": {
+								"value": "@substring(replace(replace(replace(pipeline().TriggerTime,'-',''),':',''),'T',''),0,15)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"speccode": {
+						"type": "String",
+						"defaultValue": "OB004"
+					}
+				},
+				"variables": {
+					"TimeStamp": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "metadata"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-09-06T20:28:34Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/OB005_Child')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -173,8 +1029,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"SpecCode": {
@@ -260,8 +1115,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"speccode": {
@@ -280,7 +1134,10 @@
 				"annotations": [],
 				"lastPublishTime": "2023-09-06T20:28:34Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/OB004_CHILD_FULL')]",
+				"[concat(variables('factoryId'), '/pipelines/OB004_CHILD_DELTA')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/OB005')]",
@@ -384,8 +1241,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"speccode": {
