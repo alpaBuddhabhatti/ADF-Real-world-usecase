@@ -2,16 +2,11 @@
 	"name": "LS_ABLB",
 	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
-		"description": "Azure Blob Storage/Azure Data Lake Gen2 connection",
 		"annotations": [],
 		"type": "AzureBlobStorage",
 		"typeProperties": {
-			"serviceEndpoint": "https://demostoredevetl.blob.core.windows.net/",
-			"accountKind": "StorageV2"
-		},
-		"connectVia": {
-			"referenceName": "ManagedRuntime",
-			"type": "IntegrationRuntimeReference"
+			"connectionString": "DefaultEndpointsProtocol=https;AccountName=storadfdemo26;EndpointSuffix=core.windows.net;",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDQ3NEI4MUE2LURGRDMtNEI0RS05NTM5LTMxRjhBNkI3MEY3Nl9kNzVhMzI1Ni00Y2FjLTRjMjYtYmZlNC1lMDgwMzVjN2IyYzYiDQp9"
 		}
 	}
 }
