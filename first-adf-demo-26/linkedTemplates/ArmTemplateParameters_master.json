@@ -1,0 +1,61 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "first-adf-demo-26"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"value": ""
+		},
+		"LS_ABLB_connectionString": {
+			"value": ""
+		},
+		"LS_ABLB_BOS_connectionString": {
+			"value": ""
+		},
+		"LS_ASQL_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=demo-asql-dev-etl.database.windows.net;Initial Catalog=DEMO-ASQL-DEV-ETL"
+		},
+		"LS_ASQL_BOS_connectionString": {
+			"value": ""
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"value": "https://azdevstorelake.dfs.core.windows.net/"
+		},
+		"LS_ABLB_DATAPLAT_properties_typeProperties_serviceEndpoint": {
+			"value": "https://demostoredevetl.blob.core.windows.net/"
+		},
+		"LS_ABLB_SFTP_properties_typeProperties_serviceEndpoint": {
+			"value": "https://demostoredevetl.blob.core.windows.net/"
+		},
+		"ABLB_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
+			"value": "/subscriptions/842dbd11-70de-4377-9182-6377137563f7/resourceGroups/DEMO-RG-DEV-MAIN/providers/Microsoft.Storage/storageAccounts/demostoredevetl"
+		},
+		"ABLB_ETL_MANAGED_ENDPOINT_properties_groupId": {
+			"value": "blob"
+		},
+		"ABLB_ETL_MANAGED_ENDPOINT_properties_fqdns": {
+			"value": [
+				"demostoredevetl.blob.core.windows.net"
+			]
+		},
+		"ASQL_ETL_MANAGED_ENDPOINT_properties_privateLinkResourceId": {
+			"value": "/subscriptions/842dbd11-70de-4377-9182-6377137563f7/resourceGroups/DEMO-RG-DEV-MAIN/providers/Microsoft.Sql/servers/demo-asql-dev-etl"
+		},
+		"ASQL_ETL_MANAGED_ENDPOINT_properties_groupId": {
+			"value": "sqlServer"
+		},
+		"ASQL_ETL_MANAGED_ENDPOINT_properties_fqdns": {
+			"value": [
+				"demo-asql-dev-etl.database.windows.net"
+			]
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
