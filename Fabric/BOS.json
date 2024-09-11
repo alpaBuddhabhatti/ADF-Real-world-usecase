@@ -1,0 +1,140 @@
+{
+    "name": "BOS",
+    "objectId": "a3575978-66db-44e3-a1d8-3d501fad404e",
+    "properties": {
+        "activities": [
+            {
+                "name": "Retrieve Config for BOS",
+                "type": "Lookup",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "AzureSqlSource",
+                        "sqlReaderQuery": {
+                            "value": "SELECT pc.* ,pc.id as SpecCodeId, MinWindowStartValue \nFROM [config].[Pipelines_Config] pc left join [config].[Pipeline_DeltaLoad] dpd \non pc.id = dpd.SpecCodeId \nwhere SpecCode = '@{pipeline().parameters.speccode}'",
+                            "type": "Expression"
+                        },
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
+                    },
+                    "firstRowOnly": false,
+                    "datasetSettings": {
+                        "annotations": [],
+                        "type": "AzureSqlTable",
+                        "schema": [],
+                        "typeProperties": {
+                            "database": "userdb"
+                        },
+                        "externalReferences": {
+                            "connection": "27f096d8-559c-43a2-beeb-50556a475072"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "ForEach",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "Retrieve Config for BOS",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('Retrieve Config for BOS').output.value",
+                        "type": "Expression"
+                    },
+                    "isSequential": false,
+                    "activities": [
+                        {
+                            "name": "Execute Pipeline",
+                            "type": "ExecutePipeline",
+                            "dependsOn": [],
+                            "policy": {
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "pipeline": {
+                                    "referenceName": "0bbbaefe-8cce-4fad-a45e-7fe5d79c2e35",
+                                    "type": "PipelineReference"
+                                },
+                                "waitOnCompletion": true,
+                                "parameters": {
+                                    "Source_Name": {
+                                        "value": "@item().SourceName",
+                                        "type": "Expression"
+                                    },
+                                    "Where_Condition": {
+                                        "value": "@item().WhereCondition",
+                                        "type": "Expression"
+                                    },
+                                    "Spec_Code": {
+                                        "value": "@item().SpecCode",
+                                        "type": "Expression"
+                                    },
+                                    "Field_List": {
+                                        "value": "@item().FieldList",
+                                        "type": "Expression"
+                                    },
+                                    "Directory": {
+                                        "value": "@item().Directory",
+                                        "type": "Expression"
+                                    },
+                                    "Target_Name": {
+                                        "value": "@item().TargetName",
+                                        "type": "Expression"
+                                    },
+                                    "Target_File_Extention": {
+                                        "value": "@item().TargetFileExtention",
+                                        "type": "Expression"
+                                    },
+                                    "Is_EmailFunNeeded": {
+                                        "value": "@item().IsEmailFunNeeded",
+                                        "type": "Expression"
+                                    },
+                                    "Source_Type": {
+                                        "value": "@item().SourceType",
+                                        "type": "Expression"
+                                    },
+                                    "Target_Type": {
+                                        "value": "@item().TargetType",
+                                        "type": "Expression"
+                                    },
+                                    "Operation": {
+                                        "value": "@item().Operation",
+                                        "type": "Expression"
+                                    },
+                                    "Min_Window_StartValue": {
+                                        "value": "@item().MinWindowStartValue",
+                                        "type": "Expression"
+                                    },
+                                    "Spec_Code_Id": {
+                                        "value": "@item().SpecCodeId",
+                                        "type": "Expression"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "parameters": {
+            "speccode": {
+                "type": "string"
+            }
+        },
+        "lastModifiedByObjectId": "ea938ac5-c55b-4d1c-9fcb-9574e2953161",
+        "lastPublishTime": "2024-09-11T09:22:34Z"
+    }
+}
